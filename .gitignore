@@ -1,0 +1,38 @@
+# Visual Studio cache and build folders
+.vs/
+bin/
+obj/
+TestResults/
+*.user
+*.suo
+*.cache
+*.log
+
+# AccuTrac Pro binaries (do not upload)
+AccuTrac Pro/
+AccuTrac*/
+*.exe
+*.dll
+
+# Ignore local virtual COM port configs
+*.cfg
+
+# Ignore temporary CSV logs but KEEP SensorInput.csv
+!SensorEmulator/bin/Debug/SensorInput.csv
+!SensorEmulator/SensorInput.csv
+
+# Ignore Emulator runtime log files
+*.txt
+
+# Ignore .NET publish output
+publish/
+out/
+
+# Ignore Rider / JetBrains
+.idea/
+
+# Ignore OS junk files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
