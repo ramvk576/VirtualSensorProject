@@ -73,19 +73,35 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\CommandProcessor.cs" />
+    <Compile Include="Core\ComPortManager.cs" />
+    <Compile Include="Core\Config.cs" />
     <Compile Include="Core\CRCUtility.cs" />
     <Compile Include="Core\LiveDataProvider.cs" />
     <Compile Include="Core\Logger.cs" />
+    <Compile Include="Core\RegisterMapFactory.cs" />
     <Compile Include="Core\ResponseBuilder.cs" />
     <Compile Include="Core\SensorData.cs" />
+    <Compile Include="Core\SensorProfile.cs" />
+    <Compile Include="Core\SensorSession.cs" />
     <Compile Include="Core\SerialHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="SensorInput.csv">
+    <Content Include="SensorInput_COM25.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="SensorInput_COM31.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SensorInput_COM33.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SensorInput_COM35.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="SensorInput_COM27.csv" />
+    <None Include="SensorInput_COM29.csv" />
     <None Include="packages.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

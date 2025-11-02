@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Ports;
-using System.Text;
 using System.Threading;
 using SensorEmulator.Core;
 
@@ -9,82 +9,53 @@ namespace SensorEmulator
 {
     class Program
     {
-        private static readonly string logFile = "SensorLog.txt";
-        private static readonly object logLock = new object();
-        private static LiveDataProvider dataProvider;
-        private static CommandProcessor commandProcessor;
-
         static void Main(string[] args)
         {
-            string portName = args.Length > 0 ? args[0] : "COM26";
-            bool preloadMode = args.Length > 1 && args[1].Equals("--preload", StringComparison.OrdinalIgnoreCase);
-
             DeleteUsbSensorsCfg();
 
-            Console.WriteLine($"Starting Sensor Emulator on {portName} {(preloadMode ? "[PRELOAD MODE]" : "")}");
-
-            if (File.Exists(logFile))
-                File.Delete(logFile);
-
-            SerialPort serialPort = new SerialPort(portName, 19200, Parity.None, 8, StopBits.One)
+            // Six sensors: odd = AccuTrac side, even = emulator listener.
+            var profiles = new List<SensorProfile>
             {
-                ReadTimeout = 1000,
-                WriteTimeout = 1000,
-                NewLine = "\r\n",
-                Handshake = Handshake.None,
-                DtrEnable = true,
-                RtsEnable = true
+                new SensorProfile("COM25","COM26","1235-1059526-007","SensorInput_COM25.csv", legacyCom25:true),
+                new SensorProfile("COM27","COM28","1235-1059526-001","SensorInput_COM27.csv"),
+                new SensorProfile("COM29","COM30","1235-1059526-002","SensorInput_COM29.csv"),
+                new SensorProfile("COM31","COM32","1235-1059526-003","SensorInput_COM31.csv"),
+                new SensorProfile("COM33","COM34","1235-1059526-004","SensorInput_COM33.csv"),
+                new SensorProfile("COM35","COM36","1235-1059526-005","SensorInput_COM35.csv"),
             };
 
-            try
+            foreach (var p in profiles)
             {
-                serialPort.Open();
-
-                dataProvider = new LiveDataProvider();
-                dataProvider.Load("SensorInput.csv");
-                Logger.Log("CSV file loaded.");
-
-                commandProcessor = new CommandProcessor(dataProvider);
-
-                SerialHandler handler = new SerialHandler(serialPort, commandProcessor);
-                handler.Start();
-
-                Logger.Log($"Listening on {portName} (paired with COM25).");
-
-                if (preloadMode)
+                // Ensure each CSV exists with a minimal dataset
+                if (!File.Exists(p.CsvPath))
                 {
-                    SendPreloadResponses(serialPort);
-                    Logger.Log("All preload responses sent.");
+                    File.WriteAllText(p.CsvPath, "VEL,TEMP\r\n0.396,28.55\r\n0.248,28.45\r\n0.335,28.53\r\n");
                 }
 
-                Logger.Log("Ready to handle AccuTrac commands...");
+                try
+                {
+                    var session = new SensorSession(p);
+                    session.Start();   // spawns reader thread via SerialHandler
+                    Logger.Log($"[{p.AccuPort}] Online via {p.ListenPort}. Serial {p.SerialNumber}. CSV {p.CsvPath}");
+                    Thread.Sleep(40);  // small stagger for neat logs
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"Failed to start sensor on {p.ListenPort} for {p.AccuPort}: {ex.Message}");
+                }
+            }
 
-                // Keep the application alive
-                while (true)
-                {
-                    Thread.Sleep(100);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Log("Failed to open port: " + ex.Message);
-            }
-            finally
-            {
-                if (serialPort.IsOpen)
-                {
-                    serialPort.Close();
-                    Logger.Log("Serial port closed.");
-                }
-            }
+            Logger.Log("All sensor listeners started. Ready to handle AccuTrac commands...");
+
+            // Keep process alive
+            while (true) Thread.Sleep(250);
         }
 
         private static void DeleteUsbSensorsCfg()
         {
-            string cfgPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "USBSensors.cfg");
-
             try
             {
+                string cfgPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "USBSensors.cfg");
                 if (File.Exists(cfgPath))
                 {
                     File.Delete(cfgPath);
@@ -100,47 +71,5 @@ namespace SensorEmulator
                 Logger.Log("Unable to delete USBSensors.cfg: " + ex.Message);
             }
         }
-
-        private static void SendPreloadResponses(SerialPort port)
-        {
-            string[] preload =
-            {
-                "*R1,OK",
-                "*R12,OK",
-                "P#1=0x00000007",
-                "P#4=0x35333231",
-                "P#5=0x3530312D",
-                "P#6=0x36323539",
-                "P#7=0x3730302D",
-                "P#8=0x00000000",
-                "P#9=0x00000000",
-                "P#10=0x00000000",
-                "P#11=0x00000000",
-                "P#12=0x31534155",
-                "P#13=0x2D303031",
-                "P#14=0x54676E45",
-                "P#15=0x00747365",
-                "P#16=0x00000000",
-                "P#17=0x00000000",
-                "P#18=0x00000000",
-                "P#19=0x00000000"
-            };
-
-            Logger.Log("Sending preload responses...");
-            foreach (var msg in preload)
-            {
-                try
-                {
-                    port.Write(msg + "\r\n");
-                    Logger.Log("Preload Sent: " + msg);
-                    Thread.Sleep(50);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Log("Error sending preload message: " + ex.Message);
-                }
-            }
-        }
-
     }
 }

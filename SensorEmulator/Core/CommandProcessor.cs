@@ -1,5 +1,5 @@
-﻿using SensorEmulator.Core;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace SensorEmulator.Core
@@ -7,70 +7,97 @@ namespace SensorEmulator.Core
     public class CommandProcessor
     {
         private readonly LiveDataProvider dataProvider;
+        private readonly Dictionary<string, string> regMap;
 
-        public CommandProcessor(LiveDataProvider provider)
+        public CommandProcessor(LiveDataProvider provider, Dictionary<string, string> registers)
         {
-            dataProvider = provider;
+            dataProvider = provider ?? throw new ArgumentNullException(nameof(provider));
+            regMap = registers ?? BuildDefaultRegisters();
         }
 
-        public string Process(string command)
+        private static Dictionary<string, string> BuildDefaultRegisters()
         {
-            if (string.IsNullOrWhiteSpace(command))
-                return null;
+            // Fallback to your original single-sensor constants
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["P#1"] = "0x00000007",
 
-            command = command.Trim();
+                ["P#4"] = "0x35333231",
+                ["P#5"] = "0x3530312D",
+                ["P#6"] = "0x36323539",
+                ["P#7"] = "0x3730302D",
+                ["P#8"] = "0x00000000",
+                ["P#9"] = "0x00000000",
+                ["P#10"] = "0x00000000",
+                ["P#11"] = "0x00000000",
 
-            // Handle *RPage->: remap to *R
+                ["P#12"] = "0x31534155",
+                ["P#13"] = "0x2D303031",
+                ["P#14"] = "0x54676E45",
+                ["P#15"] = "0x00747365",
+                ["P#16"] = "0x00000000",
+                ["P#17"] = "0x00000000",
+                ["P#18"] = "0x00000000",
+                ["P#19"] = "0x00000000",
+
+                ["P#30"] = "0x07E40515",
+                ["P#31"] = "0x000001F4",
+                ["P#32"] = "0x000001F4",
+                ["P#33"] = "0x00000000",
+                ["P#34"] = "0x00000000",
+
+                ["P#145"] = "0x00030040"
+            };
+        }
+
+        public string Process(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return null;
+
+            string command = raw.Trim();
+
             if (command.StartsWith("*RPage->:", StringComparison.Ordinal))
                 command = "*R" + command.Substring(10);
 
+            // Handle register reads centrally via regMap, preserving your *R timing
+            if (command.StartsWith("*R", StringComparison.OrdinalIgnoreCase))
+            {
+                if (int.TryParse(command.Substring(2), out int reg))
+                {
+                    string key = $"P#{reg}";
+                    if (regMap.TryGetValue(key, out var val))
+                    {
+                        // preserve the little sleeps you had for R4..R11
+                        if (reg >= 4 && reg <= 11) Thread.Sleep(30);
+                        return $"{key}={val}";
+                    }
+
+                    // Unknown register: safe zero
+                    return $"{key}=0x00000000";
+                }
+            }
+
             switch (command)
             {
-                case "*R1": return "P#1=0x00000007";
-
-                case "*R4": Thread.Sleep(30); return "P#4=0x35333231";
-                case "*R5": Thread.Sleep(30); return "P#5=0x3530312D";
-                case "*R6": Thread.Sleep(30); return "P#6=0x36323539";
-                case "*R7": Thread.Sleep(30); return "P#7=0x3730302D";
-                case "*R8": Thread.Sleep(30); return "P#8=0x00000000";
-                case "*R9": Thread.Sleep(30); return "P#9=0x00000000";
-                case "*R10": Thread.Sleep(30); return "P#10=0x00000000";
-                case "*R11": Thread.Sleep(30); return "P#11=0x00000000";
-
-                case "*R12": return "P#12=0x31534155";
-                case "*R13": return "P#13=0x2D303031";
-                case "*R14": return "P#14=0x54676E45";
-                case "*R15": return "P#15=0x00747365";
-                case "*R16": return "P#16=0x00000000";
-                case "*R17": return "P#17=0x00000000";
-                case "*R18": return "P#18=0x00000000";
-                case "*R19": return "P#19=0x00000000";
-
-                case "*R30": return "P#30=0x07E40515";
-                case "*R31": return "P#31=0x000001F4";
-                case "*R32": return "P#32=0x000001F4";
-                case "*R33": return "P#33=0x00000000";
-                case "*R34": return "P#34=0x00000000";
-
-                case "*R145": return "P#145=0x00030040";
-
-                case "*V":
-                    if (dataProvider.HasData)
-                    {
-                        var data = dataProvider.Next();
-                        return ResponseBuilder.BuildV(data.VEL, data.TEMP);
-                    }
-                    return "*V<SD>\r\n<VEL Units=\"m/s\">0.500</VEL>\r\n<TEMP Units=\"C\">28.50</TEMP>\r\n</SD>CRC=0xDB46\r\n";
-
+                // Keep your ancillary commands unchanged
                 case "*RS":
                 case "*RD":
                 case "*RE":
                 case "*RT":
                     return "OK";
 
-                default:
-                    return null;
+                case "*V":
+                    if (dataProvider.HasData)
+                    {
+                        var data = dataProvider.Next();
+                        // Your existing builder + firmware CRC logic stays untouched
+                        return ResponseBuilder.BuildV(data.VEL, data.TEMP);
+                    }
+                    // Safe placeholder exactly as your current code
+                    return "*V<SD>\r\n<VEL Units=\"m/s\">0.500</VEL>\r\n<TEMP Units=\"C\">28.50</TEMP>\r\n</SD>CRC=0xDB46\r\n";
             }
+
+            return null;
         }
     }
 }
