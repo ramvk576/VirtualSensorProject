@@ -31,7 +31,8 @@ namespace SensorEmulator.Core
             };
             port.Open();
 
-            var processor = new CommandProcessor(provider, regMap);
+            // ✅ Updated line – now passes serial number to CommandProcessor
+            var processor = new CommandProcessor(provider, regMap, profile.SerialNumber);
             var handler = new SerialHandler(port, processor);
             handler.Start();
         }

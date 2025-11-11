@@ -22,6 +22,13 @@ namespace SensorEmulator
                 new SensorProfile("COM31","COM32","1235-1059526-003","SensorInput_COM31.csv"),
                 new SensorProfile("COM33","COM34","1235-1059526-004","SensorInput_COM33.csv"),
                 new SensorProfile("COM35","COM36","1235-1059526-005","SensorInput_COM35.csv"),
+                new SensorProfile("COM37","COM38","1716-1099531-001","UTS_Data.csv"),
+                //new SensorProfile("COM39","COM40","1716-1099531-002","SensorInput_COM39.csv"),
+                //new SensorProfile("COM41","COM42","1716-1099531-003","SensorInput_COM41.csv"),
+                //new SensorProfile("COM43","COM44","1716-1099531-004","SensorInput_COM43.csv"),
+                //new SensorProfile("COM45","COM46","1716-1099531-005","SensorInput_COM45.csv"),
+                //new SensorProfile("COM47","COM48","1716-1099531-006","SensorInput_COM47.csv"),
+
             };
 
             foreach (var p in profiles)

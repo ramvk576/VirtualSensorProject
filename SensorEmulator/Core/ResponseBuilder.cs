@@ -16,5 +16,18 @@ namespace SensorEmulator.Core
 
             return "*V" + payload + $"CRC=0x{crc:X4}\r\n";
         }
+
+        public static string BuildT(string temp)
+        {
+            string payload =
+                "<SD>\r\n" +                
+                $"<TEMP1 Units=\"C\">{temp}</TEMP>\r\n" +
+                "</SD>";
+
+            ushort crc = CRCUtility.Compute(payload);
+
+            return "*V" + payload + $"CRC=0x{crc:X4}\r\n";
+            
+        }
     }
 }
