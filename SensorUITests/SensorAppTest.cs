@@ -117,7 +117,7 @@ namespace SensorUITests
                 var LocalUSBButton = session.FindElementByAccessibilityId(localUSBID);
                 LocalUSBButton.Click();
                 Console.WriteLine("Clicked Local USB Selection Button successfully.");
-                Thread.Sleep(8000); // wait for sensor detection
+                Thread.Sleep(12000); // wait for sensor detection
 
                 // ✅ Step 3: Click "Next" to complete USB configuration
                 try
