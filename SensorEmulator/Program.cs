@@ -30,6 +30,15 @@ namespace SensorEmulator
                 new SensorProfile("COM43","COM44","1716-1099531-004",Path.Combine(basePath,"SensorInput_COM43.csv")),
                 new SensorProfile("COM45","COM46","1716-1099531-005",Path.Combine(basePath,"SensorInput_COM45.csv")),
                 new SensorProfile("COM47","COM48","1716-1099531-006",Path.Combine(basePath,"SensorInput_COM47.csv")),
+
+                // ✅ UHS Sensors
+                new SensorProfile("COM49","COM50","1508-00000-001",Path.Combine(basePath,"SensorInput_COM49.csv")),
+                new SensorProfile("COM51","COM52","1508-00000-002",Path.Combine(basePath,"SensorInput_COM51.csv")),
+                new SensorProfile("COM53","COM54","1508-00000-003",Path.Combine(basePath,"SensorInput_COM53.csv")),
+                new SensorProfile("COM55","COM56","1508-00000-004",Path.Combine(basePath,"SensorInput_COM55.csv")),
+                new SensorProfile("COM57","COM58","1508-00000-005",Path.Combine(basePath,"SensorInput_COM57.csv")),
+                new SensorProfile("COM59","COM60","1508-00000-006",Path.Combine(basePath,"SensorInput_COM59.csv")),
+
             };
 
             foreach (var p in profiles)
