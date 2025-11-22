@@ -14,7 +14,7 @@ namespace SensorEmulator.Core
         {
             AccuPort = accuPort;
             ListenPort = listenPort;
-            SerialNumber = serialNumber;
+            SerialNumber = serialNumber;        // <-- MUST BE STRING
             CsvPath = csvPath;
             KeepLegacyCom25 = legacyCom25;
         }
@@ -23,11 +23,18 @@ namespace SensorEmulator.Core
         {
             get
             {
-                int dash = SerialNumber.LastIndexOf('-');
-                if (dash < 0 || dash + 1 >= SerialNumber.Length) return 0;
-                if (int.TryParse(SerialNumber.Substring(dash + 1), out var v)) return v;
+                // MUST use string overload for .NET Framework
+                int dash = SerialNumber.LastIndexOf("-", StringComparison.Ordinal);
+
+                if (dash < 0 || dash + 1 >= SerialNumber.Length)
+                    return 0;
+
+                if (int.TryParse(SerialNumber.Substring(dash + 1), out var v))
+                    return v;
+
                 return 0;
             }
         }
+
     }
 }

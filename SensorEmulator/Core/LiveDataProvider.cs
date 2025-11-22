@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -15,22 +14,21 @@ namespace SensorEmulator.Core
             if (!File.Exists(path))
                 return;
 
-            foreach (var line in File.ReadAllLines(path).Skip(1))
+            var lines = File.ReadAllLines(path);
+            if (lines.Length <= 1) return;
+
+            foreach (var line in lines.Skip(1))
             {
-                if (string.IsNullOrWhiteSpace(line))
-                    continue;
+                if (string.IsNullOrWhiteSpace(line)) continue;
 
                 var parts = line.Split(',');
-
-                // ✅ Handle both UAS (VEL,TEMP) and UTS (TEMP only)
                 if (parts.Length == 1)
                 {
-                    // UTS: only temperature available, set dummy velocity
+                    // UTS: only TEMP column
                     csvValues.Add(new SensorData("0.000", parts[0].Trim()));
                 }
-                else if (parts.Length >= 2)
+                else
                 {
-                    // UAS: both velocity and temperature
                     csvValues.Add(new SensorData(parts[0].Trim(), parts[1].Trim()));
                 }
             }
@@ -38,9 +36,6 @@ namespace SensorEmulator.Core
 
         public SensorData Next()
         {
-            if (csvValues.Count == 0)
-                return new SensorData("0.000", "0.000"); // safe default if CSV missing
-
             var val = csvValues[index];
             index = (index + 1) % csvValues.Count;
             return val;
